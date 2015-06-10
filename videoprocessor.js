@@ -7,41 +7,58 @@ var videoProcessor = function() {
         ctx,
         frameWidth = 0,
         frameHeight = 0,
+        framesDataURLDuplicates = [],
         framesDataURL = [],
-        subscribers = [];
+        histogramDrawer;
+
+    var frameSelectionWorker = new Worker("frame-selection.worker.js");
+    var computeFrameWorker = new Worker("compute-frame.worker.js");
+
+    frameSelectionWorker.onmessage = function forwardToComputation(event) {
+        computeFrameWorker.postMessage(event.data);
+    };
+
+    computeFrameWorker.onmessage = function processUniqueHistogram(event){
+        // only data from unique frames get to here
+        var index = event.data.index;
+        var histogramValues = event.data.histogramValues;
+        var histogram = new Histogram();
+        histogram.values = histogramValues;
+        shotDetection.addHistogram(histogram);
+        framesDataURL.push(framesDataURLDuplicates[index]);
+        histogramDrawer.draw(histogram);
+    };
 
     function timerCallback() {
         if (video.paused || video.ended) {
             return;
         }
+
         computeFrame();
         setTimeout(function () {
             timerCallback();
         }, 0);
     }
 
+    var previousFrame;
+
     function computeFrame() {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        framesDataURL.push(new Frame(canvas.toDataURL(), video.currentTime));
+        framesDataURLDuplicates.push(new Frame(canvas.toDataURL(), video.currentTime));
         var frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        var histogram = new Histogram();
 
-        for (var index = 0; index < frame.data.length; index += 4) {
-            var red = frame.data[index + 0];
-            var green = frame.data[index + 1];
-            var blue = frame.data[index + 2];
-            histogram.increaseValuesFromRGB(red, green, blue);
-        }
+        frameSelectionWorker.postMessage({
+            frame: frame,
+            previousFrame: previousFrame,
+            index: framesDataURLDuplicates.length - 1
+        });
 
-        shotDetection.addHistogram(histogram);
-        histogram.draw();
-        notifySubscribers();
+        previousFrame = frame;
     }
 
-    function notifySubscribers() {
-        for(var index = 0; index < subscribers.length; index++) {
-            subscribers[index]();
-        }
+    function clearFrameData() {
+        framesDataURLDuplicates = [];
+        framesDataURL = [];
     }
 
     return {
@@ -55,18 +72,14 @@ var videoProcessor = function() {
                 timerCallback();
             }, false);
             video.addEventListener("seeked", function () {
+                clearFrameData();
                 shotDetection.clear();
                 statistics.resetDetectedCuts();
             }, false);
+            histogramDrawer = new HistogramDrawer()
         },
         getFrame: function (index) {
             return framesDataURL[index];
-        },
-        subscribe: function (subscriber) {
-            if(typeof subscriber != 'function') {
-                throw new Error('subscriber is no function')
-            }
-            subscribers.push(subscriber);
         },
         getCurrentTime: function () {
             if(!video) {

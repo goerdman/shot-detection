@@ -1,8 +1,8 @@
 'use strict';
 
 
-function Histogram(colorSpace) {
-    this.setColorSpace(colorSpace);
+function Histogram() {
+    this.setColorSpace();
     this.initialize();
 }
 
@@ -10,9 +10,6 @@ Histogram.prototype = {
     initialize: function() {
         this.values = [];
         this.fillDefaults(this.values, 0);
-        this.canvas = document.getElementById("histogram");
-        this.ctx = this.canvas.getContext("2d");
-        this.canvas.width = this.valuesLength;
     },
     fillDefaults: function(array, defaultValue) {
         for (var i = 0; i < this.valuesLength; i++) {
@@ -51,17 +48,6 @@ Histogram.prototype = {
     },
     increaseValues: function (rgb) {
         this.values[rgb]++;
-    },
-    draw: function () {
-        var ctx = this.ctx;
-        var height = this.ctx.canvas.height;
-        var max = Math.max.apply(this, this.values);
-
-        ctx.fillStyle = "rgb(255,255,255)";
-        for(var index = 0; index < this.values.length; index++) {
-            var percentageValue = (this.values[index] / max) * height;
-            ctx.fillRect(index, height, 1, -Math.round(percentageValue));
-        }
     },
     getValues: function () {
         return this.values;

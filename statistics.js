@@ -2,8 +2,6 @@
 
 var statistics = function() {
 
-    videoProcessor.subscribe(notify);
-
     var detectedCuts = 0;
     var falslyDetectedCuts = 0;
     var sintelTrailerCutsAtSecond = [
@@ -45,7 +43,7 @@ var statistics = function() {
         return undetectedCut < 0 ? undefined : undetectedCut;
     }
 
-    function notify() {
+    function update() {
         var currentTime = videoProcessor.getCurrentTime();
         updateUi(currentTime);
     }
@@ -75,13 +73,13 @@ var statistics = function() {
     function calculatePrecision() {
         var numberOfFalslyDetectedCuts = falslyDetectedCuts;
         var precision = detectedCuts / (detectedCuts + numberOfFalslyDetectedCuts);
-        console.log(detectedCuts, numberOfFalslyDetectedCuts);
         return precision || 0;
     }
 
     return {
-        increaseDetectedCuts: function () {
-            var currentTimeInSeconds = videoProcessor.getCurrentTime();
+        increaseDetectedCuts: function (index) {
+            var currentFrame = videoProcessor.getFrame(index);
+            var currentTimeInSeconds =currentFrame.time;
             var undetectedCut = getCorrectCut(currentTimeInSeconds);
             if(undetectedCut !== undefined) {
                 console.log('correctly detected at', undetectedCut);
@@ -90,6 +88,7 @@ var statistics = function() {
             } else {
                 falslyDetectedCuts++;
             }
+            update();
         },
         resetDetectedCuts: function () {
             detectedCuts = 0;
