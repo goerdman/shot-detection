@@ -15,12 +15,19 @@
         <canvas id="canvas" class="hide"></canvas>
         <canvas id="histogram" width="256" height="250"></canvas>
     </div>
+    <div>
+        <div id="statistics">
+            <nobr>Recall: <span id="recall"></span></nobr>
+            <nobr>Precision: <span id="precision"></span></nobr>
+        </div>
+    </div>
     <div id="sceneContainer" class="clear"></div>
 
     <script src="videoprocessor.js"></script>
     <script src="histogram.js"></script>
     <script src="shotdetection.js"></script>
     <script src="frame.js"></script>
+    <script src="statistics.js"></script>
 
 </body>
 </html>

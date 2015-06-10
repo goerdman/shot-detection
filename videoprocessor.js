@@ -7,7 +7,8 @@ var videoProcessor = function() {
         ctx,
         frameWidth = 0,
         frameHeight = 0,
-        framesDataURL = [];
+        framesDataURL = [],
+        subscribers = [];
 
     function timerCallback() {
         if (video.paused || video.ended) {
@@ -34,6 +35,13 @@ var videoProcessor = function() {
 
         shotDetection.addHistogram(histogram);
         histogram.draw();
+        notifySubscribers();
+    }
+
+    function notifySubscribers() {
+        for(var index = 0; index < subscribers.length; index++) {
+            subscribers[index]();
+        }
     }
 
     return {
@@ -48,10 +56,23 @@ var videoProcessor = function() {
             }, false);
             video.addEventListener("seeked", function () {
                 shotDetection.clear();
+                statistics.resetDetectedCuts();
             }, false);
         },
         getFrame: function (index) {
             return framesDataURL[index];
+        },
+        subscribe: function (subscriber) {
+            if(typeof subscriber != 'function') {
+                throw new Error('subscriber is no function')
+            }
+            subscribers.push(subscriber);
+        },
+        getCurrentTime: function () {
+            if(!video) {
+                return 0;
+            }
+            return video.currentTime;
         }
     };
 }();

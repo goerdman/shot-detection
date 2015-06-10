@@ -14,6 +14,7 @@ var shotDetection = function() {
 
         if(isSceneChange(currentHistogram, lastHistogram)) {
             visualizeFrame(numberOfHistograms - 1);
+            statistics.increaseDetectedCuts();
         }
     }
 

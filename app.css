@@ -23,6 +23,7 @@ div:not(.frame) {
 #sceneContainer .frame {
     float: left;
     margin: 0.6%;
+    cursor: pointer;
 }
 .frame span {
     display: block;

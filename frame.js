@@ -12,7 +12,7 @@ Frame.prototype = {
         frameContainer.className = 'frame';
         var imageElement = document.createElement('img');
         var caption = document.createElement('span');
-        caption.onclick = function(){
+        frameContainer.onclick = function(){
             //function to jump to the time in the video by clicking on the time of the thumbnail
             var formattedTime = caption.innerHTML;
             var jumpToTime = 0;
